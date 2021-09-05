@@ -2,16 +2,22 @@
 # CMAKE最低版本
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 # 项目名称
-PROJECT(MyProject)
+set(PROJECT_NAME OpenCV_Project)
+PROJECT(${PROJECT_NAME})
 
-#包含第三方库
-include_directories("../3rdParty/opencv/include")
-link_directories("../3rdParty/opencv/x64/lib")
+# 设定OpenCV编译好的OpenCVConfig.cmake地址, 只需要设置这里即可
+SET("OpenCV_DIR" "D:/opencv/mingw_build")
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+link_directories(${OpenCV_LIB_DIRS})
 
 #查找当前目录所有源文件
 #并保存名称到 DIR_SRCS 变量
 aux_source_directory(. DIR_SRCS)
 
 #指定生成目标
-add_executable(MyProject ${DIR_SRCS})
+add_executable(${PROJECT_NAME} ${DIR_SRCS})
+
+#链接库
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
