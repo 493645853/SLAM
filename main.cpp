@@ -1,30 +1,48 @@
-#include<iostream>
-#include<opencv2/core.hpp>
-#include<opencv2/videoio.hpp>
-#include<opencv2/opencv.hpp>
-#include<opencv2/highgui.hpp>
-#include<opencv2/features2d.hpp>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/io/pcd_io.h>
 
-int main( int argc, char** argv )
+using pcl::PointCloud;
+using pcl::PointXYZ;
+
+int 
+main (int , char **)
 {
-    cv::Mat frame;
-    //---INITIALIZE VIDEOCAPTURE
-    cv::VideoCapture cap;
-    cap.open(0,cv::CAP_ANY);
-    if(!cap.isOpened())
-    {
-        return -1;
-    }
+  srand (unsigned (time (0)));
 
-    while(1)
-    {
-        cap.read(frame);
-        cv::imshow("Camera",frame);
-        if(cv::waitKey(5)>=0)
-        {
-            break;
-        }
-    }
+  PointCloud<PointXYZ>::Ptr cloud (new PointCloud<PointXYZ>);
 
-    return 0;
+  cloud->points.resize (5);
+  for (std::size_t i = 0; i < cloud->size (); ++i)
+  {
+    (*cloud)[i].x = float (i); 
+    (*cloud)[i].y = float (i / 2);
+    (*cloud)[i].z = 0.0f;
+  }
+
+  // Start the visualizer
+  pcl::visualization::PCLVisualizer p ("test_shapes");
+  p.setBackgroundColor (1, 1, 1);
+  p.addCoordinateSystem (1.0, "first");
+
+  //p.addPolygon (cloud, "polygon");
+  p.addPolygon<PointXYZ> (cloud, 1.0, 0.0, 0.0, "polygon", 0);
+  p.setShapeRenderingProperties (pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 10, "polygon");
+  
+  p.addLine<PointXYZ, PointXYZ> ((*cloud)[0], (*cloud)[1], 0.0, 1.0, 0.0);
+  p.setShapeRenderingProperties (pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 50, "line");
+
+  p.addSphere<PointXYZ> ((*cloud)[0], 1, 0.0, 1.0, 0.0);
+  p.setShapeRenderingProperties (pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, "sphere");
+//  p.removePolygon ("poly");
+
+  p.addText ("text", 200, 200, 1.0, 0, 0, "text");
+  
+  p.addText3D ("text3D", (*cloud)[0], 1.0, 1.0, 0.0, 0.0);
+  p.spin ();
+  p.removeCoordinateSystem ("first", 0);
+  p.spin ();
+  p.addCoordinateSystem (1.0, 5, 3, 1, "second");
+  p.spin ();
+  p.removeCoordinateSystem ("second", 0);
+  p.spin ();
 }
