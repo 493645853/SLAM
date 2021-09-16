@@ -1,3 +1,5 @@
 .vscode
+assets
 build
 *.exe
+*.jpg
