@@ -14,29 +14,9 @@
 #include <chrono>
 #include <cmath>
 
+#include "monoCalibration.hpp"
 #include "visualOdometry.hpp"
 #include "slamPlot.hpp"
-
-
-/**
- * @brief 
- * 从txt中读取匹配点
- * 
- * @param DIR 文档存放地址
- * @param match_pts 匹配点
- */
-void readMatches(const std::string &DIR, std::vector<cv::Point2f> &match_pts)
-{
-    match_pts.clear();
-    std::ifstream fin(DIR, std::ios::in);
-    std::istream_iterator<double> begin(fin), end; // iterator to read all the double data
-    std::vector<double> data(begin, end);          // load all data to the vector
-
-    for (int i = 0; i < data.size(); i += 2)
-    {
-        match_pts.push_back(cv::Point2f(data[i], data[i + 1]));
-    }
-}
 
 int main()
 {
@@ -54,8 +34,8 @@ int main()
                  0, 0, 1);
 
     std::vector<cv::Point2f> key_matched_1, key_matched_2;
-    readMatches(IMG_DIR + "I1.txt", key_matched_1);
-    readMatches(IMG_DIR + "I2.txt", key_matched_2);
+    mono::readMatches(IMG_DIR + "I1.txt", key_matched_1);
+    mono::readMatches(IMG_DIR + "I2.txt", key_matched_2);
 
     //Epipolar geometry
     std::vector<cv::Point3f> pts_3D;

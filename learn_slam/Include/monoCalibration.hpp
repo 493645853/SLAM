@@ -90,5 +90,25 @@ namespace mono
             return false;
         }
     }
+
+    /**
+     * @brief 
+     * 从txt中读取匹配点
+     * 
+     * @param DIR 文档存放地址
+     * @param match_pts 匹配点
+     */
+    void readMatches(const std::string &DIR, std::vector<cv::Point2f> &match_pts)
+    {
+        match_pts.clear();
+        std::ifstream fin(DIR, std::ios::in);
+        std::istream_iterator<double> begin(fin), end; // iterator to read all the double data
+        std::vector<double> data(begin, end);          // load all data to the vector
+
+        for (int i = 0; i < data.size(); i += 2)
+        {
+            match_pts.push_back(cv::Point2f(data[i], data[i + 1]));
+        }
+    }
 }
 #endif // __MONOCALIBRATION_H__
