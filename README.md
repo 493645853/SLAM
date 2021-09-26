@@ -1,4 +1,2 @@
-#Table of Contents {ignore=true}
-
-#Background
+# Background
 Learn "SLAM 14 讲" for fun
