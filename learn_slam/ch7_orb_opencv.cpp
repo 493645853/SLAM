@@ -2,6 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include<opencv2/features2d/features2d.hpp>
 #include <opencv2/core.hpp>
+#include<chrono>
 using namespace std;
 
 
@@ -31,7 +32,7 @@ int main(int argc, char **argv)
     {
         // update img frames
         capture >> frame_now;
-
+        auto t1 = std::chrono::steady_clock::now();
         // detect key points
         orb->detect(frame_last,key_pt_last);
         orb->detect(frame_now,key_pt_now);
@@ -70,6 +71,9 @@ int main(int argc, char **argv)
             // draw matches
             cv::drawMatches(frame_last, key_pt_last, frame_now, key_pt_now, good_matches, frame_match);
         }
+        auto t2 = std::chrono::steady_clock::now();
+        auto t_used = std::chrono::duration_cast<std::chrono::duration<double>> (t2-t1);
+        std::cout<<"time cost: "<<t_used.count()<<"\n";
 
         imshow("orb match",frame_match);
         
@@ -80,7 +84,11 @@ int main(int argc, char **argv)
         };
         // update the last frame (must be cloned, or the pointer will be returned)
         frame_last=frame_now.clone();
-    }
+    };
+
+
+
+
 
     
     return 0;

@@ -457,9 +457,33 @@ By using the maximum likelihood estimation, we can first take the log-likelihood
 $$
 (\mathbf{x}_k,\mathbf{y}_j)^*_{ML}=\arg \min \{(\mathbf{z}_{k,j}-f(\mathbf{y}_{j},\mathbf{x}_{k}))^T \mathbf{V}_{k,j}^{-1} (\mathbf{z}_{k,j}-f(\mathbf{y}_{j},\mathbf{x}_{k}))\}
 $$
-We can find that this quadratic form is equivalent to minimize the noise term (which is also called the *Mahalanobis distance*).
+We can find that this quadratic form is equivalent to minimize the noise term (which is also called the *Mahalanobis distance*). For the multiple landmarks, we can simply optimize the sum of the objective function $\forall j$.
+
+### Nonlinear Least Squares Optimization
+
+For a nonlinear function $f(\cdot)$, the least square optimization problem can be formulated as
+$$
+\min_\mathbf{x} F(\mathbf{x})=\min_\mathbf{x} \frac{1}{2}\| f(\mathbf{x}) \|^2_2
+$$
+We may want to find the gradient of this nonlinear function and then assign it to 0, but this can be computationally impossible. Many famous gradient descent methods have been developed, by expanding the function using Taylor series, as
+$$
+F(\mathbf{x}+\Delta\mathbf{x}_k) \approx F(\mathbf{x}_k) + J(\mathbf{x}_k)^T \Delta \mathbf{x}_k + \frac{1}{2}\Delta \mathbf{x}_k^T \mathbf{H}(\mathbf{x}_K)\Delta\mathbf{x}_k
+$$
+By either keeping the first order term or the second order term, the iterative methods can be used. The deepest descent method use the step $\Delta x^*=-J(\mathbf{x_k})$. If the second order term is kept, we can find the gradient of $F(\mathbf{x}+\Delta\mathbf{x}_k)$ and assign it to zero, i.e.,
+$$
+\mathbf{H}(\mathbf{X}_K)\Delta\mathbf{x}_k = -J(\mathbf{x}_k)
+$$
+which is the famous Newton's method. To find the solution, we need to compute the Hessian matrix $\mathbf{H}(\mathbf{X}_K)$ which can be time-expensive. Two more practical approaches can be used to substitute this method:  the *Gauss-Newton’s* method and the (*Levernburg-Marquardt’s* method).
+
+#### The Gauss-Newton Method
+
+Above method uses the Taylor expansion to expand the objective function $F(\cdot)$. Another way to expand the nonlinear function $f(\cdot)$, as
+$$
+
+$$
 
 
+#### The Levernberg-Marquatdt Method
 
 
 
@@ -467,5 +491,23 @@ We can find that this quadratic form is equivalent to minimize the noise term (w
 
 contents
 
+## ORB
+
+TODO
+
+## Epipolar Geometry
+
+
+
+## Triangulation
+
+
+
+## PnP
+
+
+
 # Visual Odometry: Optical Flow
+
+# BA & Graph Optimization
 

@@ -1,5 +1,5 @@
-#ifndef __STEREOCALIBRATION_H__
-#define __STEREOCALIBRATION_H__
+#ifndef __MONOCALIBRATION_H__
+#define __MONOCALIBRATION_H__
 
 #include<iostream>
 #include<fstream>
@@ -10,7 +10,7 @@
 #include<string>
 #include<vector>
 
-namespace stereo
+namespace mono
 {
     /**
     * @brief 
@@ -77,9 +77,9 @@ namespace stereo
             if (data.size() == 23)
             {
                 // assign data (CV_64F = double)
-                cameraMat = cv::Mat(3, 3, CV_64F, (void *)(std::vector<double>(data.begin(), data.begin() + 9)).data());
-                newCameraMat = cv::Mat(3, 3, CV_64F, (void *)(std::vector<double>(data.begin() + 9, data.begin() + 18)).data());
-                distCoeffs = cv::Mat(1, 5, CV_64F, (void *)(std::vector<double>(data.begin() + 18, data.end())).data());
+                cameraMat = cv::Mat(3, 3, CV_64F, (std::vector<double>(data.begin(), data.begin() + 9)).data()).clone();
+                newCameraMat = cv::Mat(3, 3, CV_64F, (std::vector<double>(data.begin() + 9, data.begin() + 18)).data()).clone();
+                distCoeffs = cv::Mat(1, 5, CV_64F, (std::vector<double>(data.begin() + 18, data.end())).data()).clone();
                 return true;
             }
             else
@@ -91,5 +91,4 @@ namespace stereo
         }
     }
 }
-
-#endif // __STEREOCALIBRATION_H__
+#endif // __MONOCALIBRATION_H__

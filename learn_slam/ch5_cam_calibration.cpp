@@ -3,7 +3,7 @@
 #include<opencv2/highgui/highgui.hpp>
 #include<string>
 #include<vector>
-#include"stereoCalibration.hpp"
+#include"monoCalibration.hpp"
 
 /**
  * @brief SLAM 14 讲 第5章 相机与图像
@@ -155,7 +155,8 @@ int main()
     // std::cout << "Translation vector : \n" << T << std::endl;
 
     //save result
-    stereo::save_CaliParameters("D:/SelfLearning_vscode/MyProject/learn_slam/Calibration/",cameraMatrix,distCoeffs,newCameraMat);
+    mono::save_CaliParameters("D:/SelfLearning_vscode/MyProject/learn_slam/Calibration/",cameraMatrix,distCoeffs,newCameraMat);
+    mono::load_caliParameters("D:/SelfLearning_vscode/MyProject/learn_slam/Calibration/",cameraMatrix,distCoeffs,newCameraMat);
 
     /**
      * @brief 
@@ -165,6 +166,8 @@ int main()
     cv::VideoCapture cap_undist(1);
     cv::Mat chessImg = cv::imread(chessImg_DIR[1]);
     cv::Mat chessImg_undist;
+
+    
     cv::undistort(chessImg,chessImg_undist,cameraMatrix,distCoeffs,newCameraMat);
 
     while(1)
