@@ -6,13 +6,13 @@
 
 namespace myPlot
 {
-    void drawCamera()
+    void drawCamera(float R, float G, float B)
     {
         const float w = 0.1;
         const float h = w * 0.75;
         const float z = w * 0.6;
         glLineWidth(1.5);
-        glColor3f(0.0f, 0.0f, 1.0f);
+        glColor3f(R,G,B);
         glBegin(GL_LINES);
         glVertex3f(0, 0, 0);
         glVertex3f(w, h, z);
@@ -73,7 +73,12 @@ namespace myPlot
             glPushMatrix();
             pangolin::OpenGlMatrix Twc_(camPos_history[i].matrix());
             glMultMatrixd(Twc_.m);
-            drawCamera();
+            
+            if(i==camPos_history.size()-1)
+                drawCamera(0.0,0.0,1.0f);
+            else
+                drawCamera(164.0/255.0, 176.0/255.0, 190.0/255.0);
+
             glPopMatrix();
 
             // trajectory

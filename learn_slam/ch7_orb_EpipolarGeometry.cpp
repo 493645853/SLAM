@@ -34,7 +34,7 @@ int main()
                  0, 0, 1);
 
     std::vector<cv::Point2f> key_matched_1, key_matched_2;
-    mono::readMatches(IMG_DIR + "I1.txt", key_matched_1);
+    mono::readMatches(IMG_DIR + "I0.txt", key_matched_1);
     mono::readMatches(IMG_DIR + "I2.txt", key_matched_2);
 
     //Epipolar geometry
@@ -64,6 +64,7 @@ int main()
     SE3.prerotate(R.transpose());
     SE3.pretranslate(-t);
     T_history.push_back(SE3);
+
 
     // visualize the results
     pangolin::CreateWindowAndBind("3d points", 800, 600);
