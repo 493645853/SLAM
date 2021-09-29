@@ -8,7 +8,9 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-    cv::VideoCapture capture(1);
+    cv::VideoCapture capture(0);
+    capture.set(cv::CAP_PROP_FRAME_WIDTH,640);
+    capture.set(cv::CAP_PROP_FRAME_HEIGHT,480);
     cv::Mat frame_now, frame_last;
 
     // initialization of the frames
@@ -85,11 +87,6 @@ int main(int argc, char **argv)
         // update the last frame (must be cloned, or the pointer will be returned)
         frame_last=frame_now.clone();
     };
-
-
-
-
-
     
     return 0;
 }

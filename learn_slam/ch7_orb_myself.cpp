@@ -9,7 +9,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-    cv::VideoCapture capture(1);
+    cv::VideoCapture capture(0);
     cv::Mat frame_now;
 
     // initialization of the frames

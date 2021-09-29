@@ -28,7 +28,7 @@ int main()
 
     // read the matches
     const int NUM_OF_IMG = 4;
-    std::string IMG_DIR("D:/SelfLearning_vscode/MyProject/learn_slam/FilesFromGithub/");
+    std::string IMG_DIR("/home/lx6/MyWork/SLAM/learn_slam/FilesFromGithub/");
     // instrinc matrix
     cv::Mat K = (cv::Mat_<double>(3, 3) << 6.871898190000000e+02, 0, 3.750426640000000e+02,
                  0, 6.413762210000000e+02, 3.087127080000000e+02,

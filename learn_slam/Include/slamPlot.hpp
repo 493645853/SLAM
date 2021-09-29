@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 #include <Eigen/Dense>
 #include <Eigen/Cholesky>
 #include <Eigen/Geometry>
@@ -11,7 +12,7 @@ namespace myPlot
         const float w = 0.1;
         const float h = w * 0.75;
         const float z = w * 0.6;
-        glLineWidth(1.5);
+        glLineWidth(1);
         glColor3f(R,G,B);
         glBegin(GL_LINES);
         glVertex3f(0, 0, 0);
@@ -39,7 +40,7 @@ namespace myPlot
 
     void drawCoordinate(float scale)
     {
-        glLineWidth(3);
+        glLineWidth(2);
         glBegin(GL_LINES);
         //x
         glColor3f(1.0, 0.0, 0.0);
@@ -71,8 +72,7 @@ namespace myPlot
         for (int i = 0; i < camPos_history.size(); i++)
         {
             glPushMatrix();
-            pangolin::OpenGlMatrix Twc_(camPos_history[i].matrix());
-            glMultMatrixd(Twc_.m);
+            glMultMatrixd(camPos_history[i].matrix().data());
             
             if(i==camPos_history.size()-1)
                 drawCamera(0.0,0.0,1.0f);
@@ -95,7 +95,7 @@ namespace myPlot
         }
 
         //绘制点
-        glPointSize(5.0);   //设置点大小
+        glPointSize(2.0);   //设置点大小
         glBegin(GL_POINTS); //点设置的开始
         glColor3f(0.0, 0.0, 0.0);
         for (auto &pts : p_3d)
@@ -104,7 +104,7 @@ namespace myPlot
         }
         glEnd(); //点设置的结束
         pangolin::FinishFrame();
-        Sleep(5); // sleep 5 ms
+        usleep(5000); // sleep 5 ms
     }
 
 }

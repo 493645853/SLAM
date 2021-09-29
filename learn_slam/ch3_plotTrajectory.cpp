@@ -1,14 +1,16 @@
 #include<iostream>
+#include<unistd.h>
 #include<vector>
 #include<pangolin/pangolin.h>
 #include<Eigen/Core>
+#include<Eigen/Geometry>
 
 void DrawTrajectory(std::vector<Eigen::Isometry3d,Eigen::aligned_allocator<Eigen::Isometry3d>>);
 
 int main()
 {
     // path of the trajectory
-    std::string trajectory_file = "D:/SelfLearning_vscode/MyProject/learn_slam/FilesFromGithub/trajectory.txt";
+    std::string trajectory_file = "/home/lx6/MyWork/SLAM/learn_slam/FilesFromGithub/trajectory.txt";
     std::ifstream fin(trajectory_file);
     if(!fin)
     {
@@ -81,6 +83,6 @@ void DrawTrajectory(std::vector<Eigen::Isometry3d,Eigen::aligned_allocator<Eigen
             glEnd();
         }
         pangolin::FinishFrame();
-        Sleep(5); // sleep 5 ms
+        usleep(5000); // sleep 5 ms
     }
 }
