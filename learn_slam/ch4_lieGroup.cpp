@@ -1,7 +1,7 @@
-#include<iostream>
-#include<Eigen/Eigen>
-#include<Sophus/so3.hpp>
-#include<Sophus/se3.hpp>
+#include <iostream>
+#include <Eigen/Eigen>
+#include <Eigen/Geometry>
+#include <sophus/se3.hpp>
 
 /**
  * @brief SLAM 14讲 第四章
@@ -13,8 +13,6 @@
 
 int main()
 {
-    
-    
     
     return 0;
 }

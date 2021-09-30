@@ -62,7 +62,7 @@ which is orthogonal to the vectors $\mathbf{a}$ and $\mathbf{b}$. Here, $\mathbf
 
 ## Euclidean Transformation 
 Suppose the world coordinates $(x_w,y_w,z_w)$ are stationary while the robot can be indicated by a moving coordinates $(x_c,y_c,z_c)$. Consider a vector $\mathbf{p}\in\mathbb{R}^3$ in the figure below: 
-![](D:\SelfLearning_vscode\MyProject\learn_slam\docs\figures\coordinate_transform.png)
+![](/home/lx6/MyWork/SLAM/learn_slam/docs/figures/coordinate_transform.png)
 We can represent the vector using those two different coordinates. Assume the world coordinates are described by the basis $(\mathbf{e}_1,\mathbf{e}_2,\mathbf{e}_3)$ and the robot coordinates are described by the basis $(\mathbf{e}'_1,\mathbf{e}'_2,\mathbf{e}'_3)$, the vector $\mathbf{p}$ will not change using the representations from those two bases, i.e.,
 $$
 [\mathbf{e}_1,\mathbf{e}_2,\mathbf{e}_3]\begin{bmatrix}
@@ -171,7 +171,7 @@ and we can also use $[r,p,y]^T$ vector to describe the Euler angles.
 
 However, the Euler angles suffer from the well-known ***Gimbal Lock*** problem: 
 
-![gimbalLock](D:\SelfLearning_vscode\MyProject\learn_slam\docs\figures\gimbalLock.png)
+![](/home/lx6/MyWork/SLAM/learn_slam/docs/figures/gimbalLock.png)
 
 As illustrated in the graph above, if we rotate in this way, the third rotation will cause ambiguity: That is, rotate about X axis will be equivalent to the case if we rotate Z axis at the first step. This will lead to a decrease in the DoFs of the system (from DoF=3 to DoF=2). Therefore, Euler angles are usually used for the visualization purpose.
 
@@ -324,6 +324,11 @@ $$
 \phi(t)^\wedge \triangleq \dot{\mathbf{R}}(t)\mathbf{R}^T(t)
 $$
 
+Then, we can multiply $\mathbf{R}(t)$ on the both sides of the above equation, and we can obtain that
+$$
+\dot{\mathbf{R}}(t)=\phi(t)^\wedge \mathbf{R}(t)
+$$
+where we can find that taking the dirivative of the rotation matrix is equivalent to left multiply $\phi(t)^\wedge$. To find the relation between the rot
 
 # Camera & Images
 
@@ -333,7 +338,7 @@ In the previous chapters, we introduced how to express the robot's motion. This 
 
 Consider the pinhole model as shown in below:
 
-<img src="D:\SelfLearning_vscode\MyProject\learn_slam\docs\figures\pinHoleModel.png" style="zoom:50%;" />
+![](/home/lx6/MyWork/SLAM/learn_slam/docs/figures/pinHoleModel.png)
 
 A point $P=[X,Y,Z]^T$ in the camera's coordinate projects its image into the image plane, producing the pixel $P'=[X',Y',Z']$ in the camera's coordinate. Their coordinates are related as
 $$

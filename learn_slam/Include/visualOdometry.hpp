@@ -3,6 +3,14 @@
 #include <Eigen/Dense>
 #include <Eigen/Cholesky>
 #include <Eigen/Geometry>
+#include <sophus/se3.hpp>
+#include <g2o/core/g2o_core_api.h>
+#include <g2o/core/base_vertex.h>
+#include <g2o/core/base_unary_edge.h>
+#include <g2o/core/block_solver.h>
+#include <g2o/core/optimization_algorithm_gauss_newton.h>
+#include <g2o/solvers/dense/linear_solver_dense.h>
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/core.hpp>
@@ -265,6 +273,7 @@ namespace myVO
 
     /**
      * @brief Direct linear transform method to solve PnP
+     * 
      * Since
      * s2*x2 = [R|t]*P_world_4d
      * we know x2 and P_world_4d by the initialization using epipolar 5 points method
@@ -325,6 +334,245 @@ namespace myVO
     }
 
     /**
+     * @brief Gaussian-Newton method to solve PnP problem (recover R, t from 3D to 2D)
+     * 
+     * @param Pos_3d_frame_1 
+     * @param Pts_2d_frame_2 
+     * @param K 
+     * @param R 
+     * @param t 
+     * @param maxIterations
+     */
+    void findPos3d2d_GN(const std::vector<cv::Point3f> &Pos_3d_frame_1,
+                        const std::vector<cv::Point2f> &Pts_2d_frame_2,
+                        EigMatfunType K, EigMatfunType R, EigMatfunType t,
+                        int maxIterations = 100,
+                        double errorThreshold = 1e-6)
+    {
+        typedef Eigen::Matrix<double,6,1> Vector6d; 
+        double cost = 0, lastCost = 0;
+        double fx = K(0,0), fy = K(1,1), cx = K(0,2), cy = K(1,2);
+
+        Eigen::Matrix<double,6,6> H = Eigen::Matrix<double,6,6>::Zero();
+        Eigen::Matrix<double,2,6> J = Eigen::Matrix<double,2,6>::Zero();
+        Vector6d b = Vector6d::Zero();
+        Sophus::SE3d pos_se3; // estimation
+
+        //main iteration loop
+        for(int i=0;i<maxIterations;i++)
+        {
+            H.fill(0);
+            b.fill(0);
+            cost = 0;
+
+            // find cost
+            for(int j=0; j<Pos_3d_frame_1.size();j++)
+            {
+                Eigen::Vector3d pos_rotTranslate = pos_se3 * Eigen::Vector3d(Pos_3d_frame_1[j].x,
+                                                                             Pos_3d_frame_1[j].y,
+                                                                             Pos_3d_frame_1[j].z);
+                double inv_z = 1./pos_rotTranslate(2);
+                pos_rotTranslate = pos_rotTranslate*inv_z; // norm the z axis
+
+                Eigen::Vector2d proj(fx*pos_rotTranslate(0)+cx, 
+                                     fy*pos_rotTranslate(1)+cy);
+
+                Eigen::Vector2d error = Eigen::Vector2d(Pts_2d_frame_2[j].x, Pts_2d_frame_2[j].y) - proj;
+                cost += error.squaredNorm();
+
+                // Jacobian matrix
+                J << -fx*inv_z, 0, fx*pos_rotTranslate(0)*inv_z, fx*pos_rotTranslate(0)*pos_rotTranslate(1), -fx-fx*pos_rotTranslate(0)*pos_rotTranslate(0), fx*pos_rotTranslate(1),
+                     0, -fy*inv_z, fy*pos_rotTranslate(1)*inv_z, fy+fy*pos_rotTranslate(1)*pos_rotTranslate(1), -fy*pos_rotTranslate(0)*pos_rotTranslate(1), -fy*pos_rotTranslate(0);
+                H += J.transpose()*J;
+                b += -J.transpose()*error;
+            }
+
+            // update incremental dx
+            Vector6d dx = H.ldlt().solve(b);
+
+            // check if nan
+            if(std::isnan(dx(0)))
+            {
+                std::cout<<"result is nan"<< "\n";
+                break;
+            }
+
+            if(i > 0 && cost>=lastCost)
+            {
+                //std::cout << "cost: " << cost << ", last cost: " << lastCost << "\n";
+                break;
+            }
+
+            // update estimation (exp mapping) left disturbance model
+            pos_se3 = Sophus::SE3d::exp(dx) * pos_se3;
+            lastCost = cost;
+
+            // if the algorithm converges, break
+            if(dx.norm() < errorThreshold)
+            {
+                //std::cout<<"converge"<<"\n";
+                break;
+            }
+        }
+
+        R = pos_se3.rotationMatrix();
+        t = pos_se3.translation();
+        //std::cout << "Final Cost: " << lastCost <<"\t pose by g−n: \n" << pos_se3.matrix() << std::endl;
+
+    }
+
+
+    /**
+     * @brief Define the vertex and the edge for g2o optimization
+     * 
+     */
+    namespace g2oBA
+    {   
+        /**
+         * @brief SE3 Vertex for the g2o optimization
+         * 
+         */
+        class VertexSE3:public g2o::BaseVertex<6, Sophus::SE3d>
+        {
+        public:
+            EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+            // how the SE3 initialize
+            virtual void setToOriginImpl() override
+            {
+                _estimate = Sophus::SE3d();
+            }
+
+            // how the SE3 update (left distub model)
+            virtual void oplusImpl(const double *update) override
+            {
+                Eigen::Matrix<double,6,1> tangSpaceVec;
+                tangSpaceVec << update[0], update[1], update[2], update[3], update[4], update[5];
+                _estimate = Sophus::SE3d::exp(tangSpaceVec) * _estimate;
+            }
+
+            virtual bool read(std::istream &in) override {return true;}
+            virtual bool write(std::ostream &out) const override {return true;}
+        };
+
+        /**
+         * @brief error edge for the g2o optimization
+         * 
+         */
+        class EdgeProjError:public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexSE3>
+        {
+        public:
+            EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+            // constructor
+            EdgeProjError(const EigMatfunType& pos3d, const EigMatfunType& K):_pos3d(pos3d),_K(K){}
+
+            // how to compute the error
+            virtual void computeError() override
+            {
+                const VertexSE3 *v = static_cast<const VertexSE3*>(this->_vertices[0]);
+                Sophus::SE3d T = v->estimate();
+                Eigen::Vector3d pts2d_estimate = _K * (T * _pos3d);
+                pts2d_estimate = pts2d_estimate / pts2d_estimate(2);
+                _error = _measurement - pts2d_estimate.head<2>();
+            }
+
+            // how to find the jacobian
+            virtual void linearizeOplus() override
+            {
+                const VertexSE3 *v = static_cast<const VertexSE3*>(this->_vertices[0]);
+                Sophus::SE3d T = v->estimate();
+                Eigen::Vector3d pos_rotTranslate = T * _pos3d;
+                double inv_z = 1./pos_rotTranslate(2);
+                double fx = _K(0, 0), fy = _K(1, 1), cx = _K(0, 2), cy = _K(1, 2);
+                _jacobianOplusXi << -fx * inv_z, 0, fx * pos_rotTranslate(0) * inv_z, fx * pos_rotTranslate(0) * pos_rotTranslate(1), -fx - fx * pos_rotTranslate(0) * pos_rotTranslate(0), fx * pos_rotTranslate(1),
+                                    0, -fy * inv_z, fy * pos_rotTranslate(1) * inv_z, fy + fy * pos_rotTranslate(1) * pos_rotTranslate(1), -fy * pos_rotTranslate(0) * pos_rotTranslate(1), -fy * pos_rotTranslate(0);
+            }
+
+            virtual bool read(std::istream &in) override {return true;}
+            virtual bool write(std::ostream &out) const override {return true;}
+
+        private:
+            Eigen::Vector3d _pos3d;
+            Eigen::Matrix3d _K; // camera matrix  
+        };
+    }
+
+    /**
+     * @brief G2O Gaussian-Newton method to solve PnP problem (recover R, t from 3D to 2D)
+     * 
+     * @param Pos_3d_frame_1 
+     * @param Pts_2d_frame_2 
+     * @param K 
+     * @param R 
+     * @param t 
+     * @param maxIterations
+     */
+    class PnP_g2o
+    {
+    public:
+        
+        // pos estimate is 6 (lie algebra) 
+        typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType;
+        typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType; //线性求解器类型
+
+        // constructor
+        PnP_g2o(const EigMatfunType& K):_K(K),blockSolver(std::make_unique<BlockSolverType>(std::make_unique<LinearSolverType>()))
+        {
+            LS_algorithm = new g2o::OptimizationAlgorithmGaussNewton(std::move(blockSolver));
+        }
+
+        void run(const std::vector<cv::Point3f> &Pos_3d_frame_1,
+                 const std::vector<cv::Point2f> &Pts_2d_frame_2,
+                 EigMatfunType R, EigMatfunType t,
+                 int maxIterations = 50)
+        {
+            // 添加顶点和边
+            g2oBA::VertexSE3 *v = new g2oBA::VertexSE3();
+            v->setEstimate(Sophus::SE3d());
+            v->setId(1); // vertex id
+
+            // init graph optimizer
+            g2o::SparseOptimizer *optimizer; // 图模型
+            optimizer = new g2o::SparseOptimizer();
+            optimizer->setAlgorithm(LS_algorithm);
+            optimizer->setVerbose(false);
+            optimizer->addVertex(v);
+
+            // edge
+            for(int i=0;i<Pos_3d_frame_1.size();i++)
+            {
+                Eigen::Vector3d pos3d = Eigen::Vector3d(Pos_3d_frame_1[i].x,Pos_3d_frame_1[i].y,Pos_3d_frame_1[i].z);
+                g2oBA::EdgeProjError *edge = new g2oBA::EdgeProjError(pos3d,_K);
+                edge->setId(i);
+                edge->setVertex(0, v);
+                edge->setMeasurement(Eigen::Vector2d(Pts_2d_frame_2[i].x, Pts_2d_frame_2[i].y));
+                edge->setInformation(Eigen::Matrix2d::Identity());
+
+                // add edge
+                optimizer->addEdge(edge);
+            }
+
+            // optimize
+            optimizer->initializeOptimization();
+            optimizer->optimize(maxIterations);
+
+            // update
+            Sophus::SE3d pos_se3 = v->estimate();
+            R = pos_se3.rotationMatrix();
+            t = pos_se3.translation();
+
+            // delete pointer
+            delete v;
+        }
+
+    private:
+        std::unique_ptr<BlockSolverType> blockSolver;
+        g2o::OptimizationAlgorithmGaussNewton *LS_algorithm;
+        Eigen::Matrix3d _K;
+    };
+
+    /**
      * @brief Transform the points for coordinate 1 to the points for coordinate 2
      * 
      * @param Pos_3d_local_1 
@@ -343,5 +591,6 @@ namespace myVO
         }
         return Pos_3d_local_2;
     }
+
 
 }
