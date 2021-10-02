@@ -1,2 +1,2 @@
 # Background
-Learn "SLAM 14 讲" for fun
+Tiny Slam project which applys the monocular camera and IMU

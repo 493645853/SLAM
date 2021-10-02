@@ -9,10 +9,18 @@
  * 
  */
 
-# include <iostream>
+#include <iostream>
+#include "mySLAM/gui.h"
+#include "mySLAM/imu.h"
 
 int main()
 {
-  std::cout << "hello slam" << std::endl;
+  //mySLAM::GUI myGUI("mySLAM");
+  mySLAM::IMU();
+
+  while(1)
+  {
+
+  } 
   return 0;
 }
