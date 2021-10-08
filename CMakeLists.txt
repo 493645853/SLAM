@@ -15,11 +15,11 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib) # output lib
 include_directories("/usr/include/eigen3")
 
 # opencv 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV CONFIG REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # sophus
-find_package(Sophus REQUIRED)
+find_package(Sophus CONFIG REQUIRED)
 include_directories(${Sophus_INCLUDE_DIRS})
 
 # g2o
@@ -30,23 +30,29 @@ include_directories(${G2O_INCLUDE_DIRS})
 find_package(Pangolin CONFIG REQUIRED)
 include_directories(${Pangolin_INCLUDE_DIRS})
 
-# serial
-find_package(catkin REQUIRED)
-include_directories(${catkin_INCLUDE_DIRS})
+# glog
+find_package(Glog CONFIG REQUIRED)
+include_directories(${GLOG_INCLUDE_DIRS})
+
+# gflags
+find_package(GFlags CONFIG REQUIRED)
+include_directories(${GFLAGS_INCLUDE_DIRS})
 
 # define the path name "THIRD_PARTY_LIBS" for the project
-set(THIRD_PARTY_LIBS
-    ${Sophus_LIBRARIES}
-    ${OpenCV_LIBS}
-    ${Pangolin_LIBRARIES}
-    ${g2o_LIBS} g2o::core g2o::stuff g2o::types_icp g2o::types_sba
-    ${pangolin}
-    ${catkin_LIBRARIES}
+set(THIRD_PARTY_LIBS 
+    ${Sophus_LIBRARIES} 
+    ${OpenCV_LIBS} 
+    ${Pangolin_LIBRARIES} 
+    ${g2o_LIBS} g2o::core g2o::stuff g2o::types_icp g2o::types_sba 
+    ${pangolin} 
+    ${GLOG_LIBRARIES} glog::glog 
+    ${GFLAGS_LIBRARIES} 
     pthread
     )
 
-
+    
 ### path configuration ###
 include_directories(${PROJECT_SOURCE_DIR}/include) # include directory
-add_subdirectory(src)
 add_subdirectory(app)
+add_subdirectory(src)
+

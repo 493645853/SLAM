@@ -9,36 +9,83 @@
  * 
  */
 
+#pragma once
+
 #ifndef __GUI_H__
 #define __GUI_H__
 
-#include <iostream>
-#include <unistd.h>
-#include <vector>
-#include <string>
 #include <thread>
 #include <pangolin/pangolin.h>
 
+#include "common_include.h"
+#include "imu.h"
+
 namespace mySLAM
 {
+    class IMU;
+
+    namespace GuiStatus
+    {
+        enum class MainWinStatus
+        {
+            OPENED,
+            CLOSED
+        };
+        enum class DataWinStatus
+        {
+            OPENED,
+            CLOSED
+        };
+    }
+    /**
+     * @brief GUI Class for data viewing
+     * 
+     */
     class GUI
     {
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
         typedef std::shared_ptr<GUI> Ptr; // share the GUI data
-         
-        GUI(std::string winName, int w=800, int h=600);
+
+        GUI(std::string winName, int w = 800, int h = 600);
         ~GUI();
+
+        // main window status
+        GuiStatus::MainWinStatus mainWindowStatus() { return _mainWinStatus; }
+        // data window status
+        GuiStatus::DataWinStatus dataWindowStatus() { return _dataWinStatus; }
+
+        // External interface
+        void updateIMUInfo(); // update imu info
+        // update the matched image
+        void updateMatchedImg(const cv::Mat &img)
+        {
+            std::unique_lock<std::mutex> lck(_gui_data_mux);
+            img.copyTo(_matchedFrame);
+        };
+
+        // link
+        void linkToIMU(std::shared_ptr<IMU> imuPtr) { _imu = imuPtr; }
 
     private:
         void _main_loop();
         void _showSensor_loop();
 
     private:
-        std::thread _main_thread, _showSensor_thread;
+        void drawCamera(float R, float G, float B);
+        void drawCoordinate(float scale);
 
+    private:
+        GuiStatus::MainWinStatus _mainWinStatus = GuiStatus::MainWinStatus::CLOSED;
+        GuiStatus::DataWinStatus _dataWinStatus = GuiStatus::DataWinStatus::CLOSED;
+        std::thread _main_thread, _showSensor_thread;
+        std::mutex _gui_data_mux;
         std::string _windowName;
+        cv::Mat _matchedFrame;
         int _width, _height;
+
+    private:
+        std::shared_ptr<IMU> _imu = nullptr;
     };
 }
 

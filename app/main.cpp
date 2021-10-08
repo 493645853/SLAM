@@ -9,18 +9,13 @@
  * 
  */
 
-#include <iostream>
-#include "mySLAM/gui.h"
-#include "mySLAM/imu.h"
+#include "mySLAM/vslamMgr.h"
 
 int main()
 {
-  //mySLAM::GUI myGUI("mySLAM");
-  mySLAM::IMU();
-
-  while(1)
-  {
-
-  } 
+  mySLAM::VSlamManager::Ptr slamMgr(new mySLAM::VSlamManager);
+  slamMgr->init();
+  slamMgr->run();
+  LOG(INFO) << "Program terminated" ;
   return 0;
 }

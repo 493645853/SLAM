@@ -7,5 +7,14 @@
 
 add_library(${PROJECT_NAME} SHARED
             imu.cpp
-            gui.cpp)
+            gui.cpp
+            vslamMgr.cpp
+            videoCapture.cpp
+            frontEnd.cpp
+            frame.cpp
+            map.cpp
+            feature2d.cpp
+            landMark.cpp
+            backEnd.cpp
+            orbMatcher.cpp)
 target_link_libraries(mySLAM ${THIRD_PARTY_LIBS})
