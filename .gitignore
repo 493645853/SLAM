@@ -1,6 +1,7 @@
 .vscode
 assets
 build
+lib
 *.exe
 *.jpg
 *.pdf
