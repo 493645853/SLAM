@@ -2,6 +2,8 @@
 assets
 build
 lib
+
 *.exe
 *.jpg
 *.pdf
+*.so
