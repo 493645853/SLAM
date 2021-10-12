@@ -24,6 +24,7 @@ namespace mySLAM
     {
         CONNECTED,
         DISCONNECTED,
+        EKF_INITING,
         WORKING
     };
     class IMU
@@ -77,16 +78,17 @@ namespace mySLAM
         bool initPort();
         bool readPort();
         void _imu_loop();
-        void _stop(); // TODO
+        void _stop();
 
     private:
         ImuStatus _status = ImuStatus::DISCONNECTED;
+        const double g = 9.81; // gravity acceleration
         double _temperature;
         double _ax, _ay, _az; // acceleration
         double _wx, _wy, _wz; // angle velocity
         double _mx, _my, _mz; // 3d magnetic sensor data
 
-        Eigen::Vector3d accel_vec;
+        Eigen::Vector3d accel_vec, accel_vec_ref;
         Eigen::Vector3d anglVel_vec;
         Eigen::Vector3d mag_vec;
 
@@ -95,30 +97,43 @@ namespace mySLAM
         inline double byte2anglVel(const u_char &L8b, const u_char &H8b);
         inline double byte2mag(const u_char &L8b, const u_char &H8b);
 
-    /**
+        /**
      * @brief for EKF algorithm
      * 
      */
     private:
-        const int num_maxHistory = 4;
-        const double g = 9.81; // gravity acceleration
-        std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> angleVel_history;
-        Eigen::Quaterniond _q_imu, _q_rotCoordinate;
-        double _dt = 1.0 / RX_RATE;
-        Eigen::Matrix3d toCrossProductMat(const Eigen::Vector3d &angleVel);
-        Eigen::Matrix4d toOmegaMat(const Eigen::Vector3d &angleVel);
+        const long unsigned int num_maxHistory = 100;
+        std::deque<Eigen::Vector3d> accel_history;
+        const double _dt = 1.0 / RX_RATE;
+        const double _angleThresh = 5;
 
-        // Extended Kalman filter parameters
-        EigVector8d _stateVec;
-        EigMatrix8d _stateErrCov;
-        EigMatrix8d _processNoiseCov;
+        // Extended Kalman filter state parameters
+        double _sigma2_gyroBias, _sigma2_gyroNoise;
+        Eigen::Vector3d _accel_bias, _gyro_bias;
+        Eigen::Quaterniond _q_imu; // 4D quaternion, 3d gyro bias
+        EigMatrix6d _stateErrCov, _stateErrTran; // error state cov & transform, 3d angle axis, 3d gyro bias
+        EigMatrix6d _processNoiseCov;
+        Eigen::Matrix3d _accelNoiseCov;
         Eigen::Matrix3d _measurementNoiseCov;
 
-        // function for kalman filter
-        void quaternionPropagte(const Eigen::Vector3d &angleVel); // propagate quaternion using only unbiased gyro measurement
+        /* function for kalman filter */
+        // compute the equivalent skew-symmetric matrix for input vector
+        inline Eigen::Matrix3d toCrossProductMat(const Eigen::Vector3d &angleVel);
+        // compute the equivalent omega matrix for the input vector
+        inline Eigen::Matrix4d toOmegaMat(const Eigen::Vector3d &angleVel);
+        // propagate quaternion using only unbiased gyro measurement
+        void quaternionPropagate(const Eigen::Vector3d &angleVel);
+        // compute the state covariance
+        void stateErrCovPropagate(const Eigen::Vector3d &angleVel);
 
-        void state_predict(); // EKF predict
-        void state_update();  // EKF update
+
+        bool state_init();
+        // EKF predict
+        void state_predict(const Eigen::Vector3d &angleVel);
+        // EKF update 
+        void state_update(const Eigen::Vector3d &accel);
+        // perform the whole EKF for 1 iteration  
+        void ekf_stepAll();   
     };
 }
 #endif // __IMU_H__

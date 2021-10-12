@@ -43,9 +43,15 @@ namespace mySLAM
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             d_main.Activate(main_handler);
+            if(_imu)
+            {
+                Eigen::Isometry3d T(_imu->getQuaternion());
+                glMultMatrixd(T.data());
+                drawCoordinate(0.2);
+                drawCamera(0.0, 0.0, 1.0f);
+                glPopMatrix();
+            }
 
-            drawCoordinate(0.2);
-            drawCamera(0.0, 0.0, 1.0f);
 
             // Swap frames and Process Events
             pangolin::FinishFrame();
@@ -61,7 +67,7 @@ namespace mySLAM
     {
         _dataWinStatus = GuiStatus::DataWinStatus::OPENED;
         // create window
-        pangolin::CreateWindowAndBind("Sensor Data Viewer", 640, 480);
+        pangolin::CreateWindowAndBind("Imu Data Viewer", 640, 240);
 
         // enable 3d mouse handler
         glEnable(GL_DEPTH_TEST);
@@ -69,9 +75,6 @@ namespace mySLAM
         // Issue specific OpenGl we might need
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        // Two img view
-        pangolin::View &d_Two_Frames = pangolin::CreateDisplay();
 
         // add the IMU orientation view
         pangolin::OpenGlRenderState IMU_pos_handler(
@@ -93,34 +96,17 @@ namespace mySLAM
         IMU_dat_plotter.Track("$i");
     
 
-        pangolin::Display("multi")
-            .SetBounds(0.0, 1.0, 0.0, 1.0)
-            .SetLayout(pangolin::LayoutEqualVertical)
-            .AddDisplay(d_Two_Frames)
-            .AddDisplay(pangolin::Display("IMU")
-                            .SetLayout(pangolin::LayoutEqualHorizontal)
-                            .AddDisplay(d_IMU_pos)
-                            .AddDisplay(IMU_dat_plotter));
+        pangolin::Display("IMU")
+                        .SetLayout(pangolin::LayoutEqualHorizontal)
+                        .AddDisplay(d_IMU_pos)
+                        .AddDisplay(IMU_dat_plotter);
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        pangolin::GlTexture imageTexture(640,240,GL_RGB,false,0,GL_RGB,GL_UNSIGNED_BYTE);
-
         // Default hooks for exiting (Esc) and fullscreen (tab).
         while (!pangolin::ShouldQuit())
         {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            if(!_matchedFrame.empty())
-            {
-                d_Two_Frames.Activate();
-                cv::Mat _imgShow;
-                cv::resize(_matchedFrame,_imgShow, cv::Size2i(640,240));
-                imageTexture.Upload(_imgShow.data,GL_BGR,GL_UNSIGNED_BYTE);
-                glColor3f(1.0,1.0,1.0);
-                imageTexture.RenderToViewportFlipY();
-            }
-            
-            
             if (_imu)
             {
                 std::unique_lock<std::mutex> lck(_gui_data_mux);
@@ -129,6 +115,7 @@ namespace mySLAM
                 // load quaternion
                 d_IMU_pos.Activate(IMU_pos_handler);
                 glPushMatrix();
+                // right-hand coordinate
                 Eigen::Isometry3d T(_imu->getQuaternion());
                 glMultMatrixd(T.data());
                 pangolin::glDrawColouredCube(-0.2, 0.2);
@@ -136,12 +123,18 @@ namespace mySLAM
                 glPopMatrix();
             }
 
+            if(!_keyPtsImg.empty())
+            {
+                cv::imshow("Orb KeyPoints", _keyPtsImg);
+                cv::waitKey(1);
+            }
+
             // Swap frames and Process Events
             pangolin::FinishFrame();
-            usleep(20000);
+            usleep(10000);
         }
         // destroy window if thread terminates
-        pangolin::DestroyWindow("Sensor Data Viewer");
+        pangolin::DestroyWindow("Imu Data Viewer");
         _dataWinStatus = GuiStatus::DataWinStatus::CLOSED;
     }
 
@@ -178,7 +171,7 @@ namespace mySLAM
 
     void GUI::drawCoordinate(float scale)
     {
-        glLineWidth(2);
+        glLineWidth(3);
         glBegin(GL_LINES);
         //x
         glColor3f(0.0, 0.0, 1.0);

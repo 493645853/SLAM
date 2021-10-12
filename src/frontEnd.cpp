@@ -75,19 +75,24 @@ namespace mySLAM
             }
 
             // load the matched key points to the current frame object
+            // show matches
+            cv::Mat key_img;
+            _current_frame->curr_img.copyTo(key_img);
             for (auto &m : _matches)
             {
                 _current_frame->prev_feature.push_back(
                     Feature2d::Ptr(new Feature2d(prev_keypoints[m.queryIdx], _current_frame)));
                 _current_frame->curr_feature.push_back(
                     Feature2d::Ptr(new Feature2d(curr_keypoints[m.trainIdx], _current_frame)));
+                
+                cv::circle(key_img, curr_keypoints[m.trainIdx].pt, 2, cv::Scalar(0, 255.0, 0), -1);
+                cv::rectangle(key_img, curr_keypoints[m.trainIdx].pt - cv::Point2f(5,5), 
+                              curr_keypoints[m.trainIdx].pt + cv::Point2f(5,5),
+                              cv::Scalar(0,255,0));
+  
             }
 
-            // draw matches
-            cv::drawMatches(_current_frame->prev_img, prev_keypoints,
-                            _current_frame->curr_img, curr_keypoints,
-                            _matches, _matchedTwoImg);
-            _gui->updateMatchedImg(_matchedTwoImg);
+            _gui->updateKeyPtsImg(key_img);
         }
 
         return _matches.size();

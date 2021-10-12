@@ -57,12 +57,7 @@ namespace mySLAM
 
         // External interface
         void updateIMUInfo(); // update imu info
-        // update the matched image
-        void updateMatchedImg(const cv::Mat &img)
-        {
-            std::unique_lock<std::mutex> lck(_gui_data_mux);
-            img.copyTo(_matchedFrame);
-        };
+        void updateKeyPtsImg(const cv::Mat& img){img.copyTo(_keyPtsImg);} 
 
         // link
         void linkToIMU(std::shared_ptr<IMU> imuPtr) { _imu = imuPtr; }
@@ -81,8 +76,8 @@ namespace mySLAM
         std::thread _main_thread, _showSensor_thread;
         std::mutex _gui_data_mux;
         std::string _windowName;
-        cv::Mat _matchedFrame;
         int _width, _height;
+        cv::Mat _keyPtsImg;
 
     private:
         std::shared_ptr<IMU> _imu = nullptr;

@@ -52,7 +52,7 @@ namespace mySLAM
                 _imu->terminate();
                 break;
             }
-            usleep(30000);
+            //usleep(30000);
         }
         LOG(INFO) << "Slam Manager terminated";
     }

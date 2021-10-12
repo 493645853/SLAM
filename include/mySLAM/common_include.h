@@ -42,7 +42,15 @@
 
 // typedef
 typedef Eigen::Ref<Eigen::MatrixXd> EigMatfunType;
+typedef Eigen::Matrix<double,3,9> EigMatrix3x9d;
+typedef Eigen::Matrix<double,3,6> EigMatrix3x6d;
+typedef Eigen::Matrix<double,6,1> EigVector6d;
+typedef Eigen::Matrix<double,6,6> EigMatrix6d;
+typedef Eigen::Matrix<double,7,1> EigVector7d;
 typedef Eigen::Matrix<double,8,1> EigVector8d;
 typedef Eigen::Matrix<double,8,8> EigMatrix8d;
-
+typedef Eigen::Matrix<double,9,1> EigVector9d;
+typedef Eigen::Matrix<double,9,9> EigMatrix9d;
+typedef Eigen::Matrix<double,10,1> EigVector10d;
+typedef Eigen::Matrix<double,10,10> EigMatrix10d;
 #endif // __COMMON_INCLUDE_H__
